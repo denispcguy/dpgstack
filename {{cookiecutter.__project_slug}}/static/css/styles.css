@@ -1,0 +1,64 @@
+/* Style for rows while the header request is processing */
+tr.htmx-request {
+  background-color: #ada66b;
+  opacity: 0.7;
+  transition: background-color 0.2s ease-in;
+  color: lightyellow;
+}
+
+/* Optional: style for the header itself while loading */
+th.htmx-request {
+  cursor: wait;
+}
+
+/* The 'flash' state when the row is first added/swapped */
+.tr-flash.htmx-added {
+  background-color: #fef08a;
+}
+
+/* The 'transition' back to normal */
+.tr-flash {
+  transition: background-color 1s ease-out;
+}
+
+/* For Deletion: Fade out before removal */
+tr.htmx-swapping {
+  background-color: #ada66b;
+}
+
+@keyframes googleProgress {
+  0% {
+    left: 0%;
+    width: 0%;
+    opacity: 0.3;
+  }
+  
+  50% {
+    left: 0%;
+    width: 100%;
+    opacity: 0.9;
+  }
+  
+  100% {
+    left: 100%;
+    width: 0%;
+    opacity: 0.3;
+  }
+}
+
+.animate-google-progress {
+  position: relative;
+  animation: googleProgress 1.2s ease-in-out infinite;
+}
+
+.rotate-me {
+  transition: transform 1s ease-in-out;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+[x-cloak] {
+  display: none !important;
+}

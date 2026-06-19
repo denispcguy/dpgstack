@@ -1,0 +1,162 @@
+- name: Deploy {{ cookiecutter.__project_slug }}
+  hosts: webservers
+  become: true
+  tasks:
+    # ============================================
+    # PHASE 1: SETUP
+    # ============================================
+    - name: Update APT repositories
+      apt:
+        update_cache: yes
+
+    - name: Install prerequisites
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Create shared Docker network for dpgstack projects
+      docker_network:
+        name: dpgstack-network
+        driver: bridge
+        state: present
+
+    - name: Create Master Nginx directory
+      file:
+        path: /root/dpgstack/nginx_master
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Create Master Nginx user_conf.d directory that stores configs of all the server`s projects
+      file:
+        path: /root/dpgstack/nginx_master/user_conf.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Create Master Nginx static directory for shared static files
+      file:
+        path: /root/dpgstack/nginx_master/static
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Create Master Nginx nginx_secrets directory that stores all the certificate data
+      file:
+        path: /root/dpgstack/nginx_master/nginx_secrets
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Create project directory
+      file:
+        path: /root/dpgstack/projects/{{ cookiecutter.__project_slug }}
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Create bare Git repository for {{ cookiecutter.__project_slug }}
+      ansible.builtin.command: git init --bare /root/dpgstack/projects/{{ cookiecutter.__project_slug }}/{{ cookiecutter.__project_slug }}_bare_repo
+      args:
+        creates: "/root/dpgstack/projects/{{ cookiecutter.__project_slug }}/{{ cookiecutter.__project_slug }}_bare_repo/HEAD"
+
+    # ============================================
+    # PHASE 2: COPY
+    # ============================================
+
+    - name: Copy Nginx config for {{ cookiecutter.__project_slug }}
+      copy:
+        src: /root/nginx_master/{{ cookiecutter.__project_slug }}.conf
+        dest: /root/dpgstack/nginx_master/user_conf.d/{{ cookiecutter.__project_slug }}.conf
+
+    - name: Clone project from bare repository
+      ansible.builtin.git:
+        repo: /root/dpgstack/projects/{{ cookiecutter.__project_slug }}/{{ cookiecutter.__project_slug }}_bare_repo
+        dest: /root/dpgstack/projects/{{ cookiecutter.__project_slug }}/source
+        version: main
+        force: yes
+
+    - name: Copy staticfiles from ansible container
+      ansible.builtin.copy:
+        src: /root/staticfiles/
+        dest: /root/dpgstack/nginx_master/static/
+        mode: preserve
+
+    - name: Copy .env files that are not in git
+      ansible.builtin.copy:
+        src: "/root/deploy/{% raw %}{{ item }}{% endraw %}"
+        dest: "/root/dpgstack/projects/{{ cookiecutter.__project_slug }}/source/deploy/deploy_on_dpgstack_com/{% raw %}{{ item }}{% endraw %}"
+      loop:
+        - django/.env
+        - jenkins/.env
+        - grafana/.env
+        - prometheus/exporters/.postgres.env
+
+    # ============================================
+    # PHASE 3: RUN
+    # ============================================
+
+    - name: Ensure Master Nginx container is there
+      docker_container:
+        name: dpgstack-nginx_master-container
+        image: jonasal/nginx-certbot:6.0.1-nginx1.29.4
+        state: started
+        restart_policy: unless-stopped
+        detach: true
+        auto_remove: false
+        cleanup: false
+        published_ports:
+          - "80:80"
+          - "443:443"
+        env:
+          CERTBOT_EMAIL: "admin@dpgstack.com"
+        mounts:
+          - type: bind
+            source: /root/dpgstack/nginx_master/nginx_secrets
+            target: /etc/letsencrypt
+            read_only: false
+          - type: bind
+            source: /root/dpgstack/nginx_master/user_conf.d
+            target: /etc/nginx/user_conf.d
+            read_only: true
+          - type: bind
+            source: /root/dpgstack/nginx_master/static
+            target: /static
+            read_only: true
+        networks:
+          - name: dpgstack-network
+
+    - name: Deploy application stack with Docker Compose V2
+      community.docker.docker_compose_v2:
+        project_src: /root/dpgstack/projects/{{ cookiecutter.__project_slug }}/source/deploy/deploy_on_dpgstack_com
+        files:
+          - compose.yaml
+        state: present
+        build: always
+
+    - name: Gracefully reload NGINX by sending SIGHUP to the container's main process
+      command: docker kill --signal=HUP dpgstack-nginx_master-container

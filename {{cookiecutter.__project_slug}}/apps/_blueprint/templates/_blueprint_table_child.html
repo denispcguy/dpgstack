@@ -1,0 +1,99 @@
+{% load static table_tags widget_tweaks %}
+<c-base.for-table>
+    <h1 class="truncate max-h-7">{{ parent_name }}</h1>
+    <div x-data="{ formShown: false }"
+         class="flex pt-2 h-full items-center justify-center">
+        <c-fancy.table.table>
+            <c-slot name="tr_loop">
+                {% partialdef table_row %}
+                    <c-fancy.table.row class="tr-flash" id="row-{{ piece.id }}">
+                        <td class="relative p-2">
+                            <c-fancy.table.actions-popup>
+                                <c-fancy.table.action-button text="Delete"
+                                                             hx-delete="{% url url_name_detail piece.id %}"
+                                                             hx-vals='{"action": "simple-delete"}'
+                                                             hx-target="closest tr"
+                                                             hx-swap="outerHTML"
+                                                             hx-confirm="Are you sure you want to delete this item?" />
+                                <c-fancy.table.action-button text="Edit"
+                                                             hx-disinherit="*"
+                                                             hx-get="{% url url_name_detail piece.id %}"
+                                                             hx-vals='{"action": "edit-row", "parent_pk": "{{ parent_pk }}"}'
+                                                             hx-target="#row-{{ piece.id }}"
+                                                             hx-swap="outerHTML" />
+                                CHILD_ACTION_BUTTONS
+                            </c-fancy.table.actions-popup>
+                        </td>
+                        {% for field in fields %}<td class="p-2 wrap-break-word">{{ piece|get_field:field }}</td>{% endfor %}
+                    </c-fancy.table.row>
+                {% endpartialdef %}
+                {% partialdef edit_row %}
+                    <tr id="row-{{ piece.id }}" class="bg-blue-800 text-blue-100 tr-flash">
+                        <td class="p-2">
+                            <input type="hidden" name="pk" value="{{ piece.id }}">
+                            <input type="hidden" name="parent_pk" value="{{ parent_pk }}">
+                            <button hx-put="{% url url_name_detail piece.id %}"
+                                    hx-vals='{"action": "simple-update"}'
+                                    hx-include="#row-{{ piece.id }}"
+                                    hx-target="closest tr"
+                                    hx-swap="outerHTML"
+                                    class="text-success hover:bg-success/10 p-1 rounded-md transition-colors">
+                                <c-svg.checkmark />
+                            </button>
+                            <button hx-get="{% url url_name_detail piece.id %}"
+                                    hx-disinherit="*"
+                                    hx-vals='{"action": "normal-row", "parent_pk": "{{ parent_pk }}"}'
+                                    hx-target="closest tr"
+                                    hx-swap="outerHTML"
+                                    class="text-error hover:bg-error/10 p-1 rounded-md transition-colors">
+                                <c-svg.cross />
+                            </button>
+                        </td>
+                        {% for field_name in form.fields %}
+                            <td class="p-2">
+                                {% with field=form|get_item:field_name %}<c-fancy.form.field-inline :field="field" />{% endwith %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endpartialdef %}
+                {% for piece in queryset %}
+                    {% partial table_row %}
+                {% endfor %}
+            </c-slot>
+        </c-fancy.table.table>
+        <div class="flex flex-col gap-4 ml-4">
+            <button @click="$store.darkMode.toggle()"
+                    class="cursor-pointer text-on-surface hover:opacity-80">
+                <c-svg.dark-mode class="h-6 w-6" />
+            </button>
+            <button @click="formShown = true"
+                    class="cursor-pointer text-on-surface hover:opacity-80">
+                <c-svg.plus class="h-6 w-6" />
+            </button>
+            <a href="{% url parent_url_name %}"
+               hx-boost="true"
+               class="inline-block cursor-pointer text-on-surface hover:opacity-80 transition-opacity">
+                <c-svg.back class="h-6 w-6" />
+            </a>
+        </div>
+        <c-fancy.form.popup x-show="formShown">
+            <div class="mb-6">
+                <h3 class="text-xl font-bold">New BlueprintChildModel</h3>
+            </div>
+            <form hx-post="{% url url_name %}"
+                  hx-swap="afterbegin"
+                  hx-target="tbody"
+                  @submit="formShown = false"
+                  class="space-y-4">
+                <input type="hidden" name="action" value="accept-form" />
+                <input type="hidden" name="parent_pk" value="{{ parent_pk }}" />
+                {% for field_name in form.fields %}
+                    {% with field=form|get_item:field_name %}<c-fancy.form.field :field="field" label="{{ field.label }}" />{% endwith %}
+                {% endfor %}
+                <div class="flex justify-end gap-3 pt-2">
+                    <c-fancy.form.submit-button />
+                </div>
+            </form>
+        </c-fancy.form.popup>
+    </div>
+</c-base.for-table>

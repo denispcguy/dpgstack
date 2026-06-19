@@ -1,0 +1,17 @@
+{
+  "project_name": "my project",
+  "__project_slug": "{{ cookiecutter.project_name.lower()|replace(' ', '_')|replace('-', '_')|replace('.', '_')|trim() }}",
+  "domain_name": "example.com",
+  "server_ssh_name": "prod",
+  "__ssh_slug": "{{ cookiecutter.server_ssh_name.lower()|replace(' ', '_')|replace('-', '_')|replace('.', '_')|trim() }}",
+  "local_postgres_port": "{{ range(5433, 5900) | random }}",
+  "local_nginx_port": "{{ range(8000, 9000) | random }}",
+  "_copy_without_render": [
+    "*.html",
+    "*.js",
+    "*.map",
+    "*.css",
+    "**/base.json",
+    "**/suit_model.py"
+  ]
+}

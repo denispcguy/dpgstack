@@ -1,0 +1,36 @@
+{% comment %} Context: app_name; queryset; page_obj; fields; {% endcomment %}
+{% load table_tags %}
+<div x-data="{additionalActionsOpen: false}"
+     id="table-container">
+    <div class="h-[calc(100vh-150px)] max-w-4xl mx-auto overflow-y-scroll overflow-x-hidden">
+        <table class="table-fixed w-full">
+            <thead class="sticky top-0 z-10 bg-surface-alt text-sm text-on-surface-strong dark:bg-surface-dark-alt dark:text-on-surface-dark-strong">
+                <tr>
+                    <th class="text-left select-none h-10 text-sm font-medium uppercase tracking-wider whitespace-normal leading-tight cursor-pointer w-44 wrap-break-word">
+                        actions
+                    </th>
+                    {% for field in fields %}
+                        <th class="select-none h-10 text-sm font-medium uppercase tracking-wider whitespace-normal leading-tight cursor-pointer w-44 wrap-break-word"
+                            hx-get="{% url url_name %}{% querystring action='get-rows-ordered' order_by=request.GET.order_by|figure_order:field %}"
+                            hx-target="#table-container"
+                            hx-select="#table-container"
+                            hx-indicator="tbody tr"
+                            hx-swap="outerHTML">
+                            <div class="flex">
+                                <span>{{ field }}</span>
+                                <c-svg.small-arrow field_name="{{ field }}" />
+                            </div>
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline dark:divide-outline-dark">
+                {% partialdef table_rows %}
+                    {{ tr_loop }}
+                {% endpartialdef %}
+                {% partial table_rows %}
+                </tbody>
+            </table>
+        </div>
+        <c-fancy.table.pagination />
+    </div>

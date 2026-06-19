@@ -1,0 +1,22 @@
+{% load static table_tags widget_tweaks %}
+<c-base.for-table>
+    <h1 class="truncate max-h-7">{{ parent_name }}</h1>
+    <div class="h-screen flex">
+        <div class="flex-1 overflow-y-auto p-6">
+            <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+                {% for piece in queryset %}<c-fancy.card />{% endfor %}
+            </div>
+        </div>
+        <div class="flex flex-col gap-4 ml-4">
+            <button @click="$store.darkMode.toggle()"
+                    class="cursor-pointer text-on-surface hover:opacity-80">
+                <c-svg.dark-mode class="h-6 w-6" />
+            </button>
+            <a href="{% url parent_url_name %}"
+               hx-boost="true"
+               class="inline-block cursor-pointer text-on-surface hover:opacity-80 transition-opacity">
+                <c-svg.back class="h-6 w-6" />
+            </a>
+        </div>
+    </div>
+</c-base.for-table>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="h-4 w-4 opacity-40 dark:text-accent"
+     :class="{ 'rotate-180': '{{ request.GET.order_by }}' !== '{{ field_name }}', 'opacity-100': '{{ request.GET.order_by }}' === '{{ field_name }}' || '{{ request.GET.order_by }}' === '-{{ field_name }}'}"
+     fill="none"
+     viewBox="0 0 24 24"
+     x-cloak
+     stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+</svg>

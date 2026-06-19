@@ -1,0 +1,10 @@
+{% load static table_tags widget_tweaks %}
+<c-base.for-table>
+    <div class="h-screen flex">
+        <div class="flex-1 overflow-y-auto p-6">
+            <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+                {% for piece in queryset %}<c-fancy.card />{% endfor %}
+            </div>
+        </div>
+    </div>
+</c-base.for-table>

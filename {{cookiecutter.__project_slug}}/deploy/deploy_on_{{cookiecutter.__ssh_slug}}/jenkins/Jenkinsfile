@@ -1,0 +1,13 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh 'pwd'
+                sh 'ls -la'
+                sh 'docker compose -f deploy/deploy_on_{{cookiecutter.__ssh_slug}}/compose.yaml ps'
+                sh 'docker compose -f deploy/deploy_on_{{cookiecutter.__ssh_slug}}/compose.yaml up --build -d'
+            }
+        }
+    }
+}

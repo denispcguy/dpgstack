@@ -1,0 +1,24 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <head>
+        <script src="{% static 'js/darkmode.js' %}" defer></script>
+        <script src="{% static 'js/notifications.js' %}" defer></script>
+        <script src="{% static 'js/htmx.min.js' %}" defer></script>
+        <script src="{% static 'js/htmx.sse.js' %}" defer></script>
+        <script defer src="{% static 'js/alpine.focus.js' %}"></script>
+        <script defer src="{% static 'js/alpine.collapse.js' %}"></script>
+        <script defer src="{% static 'js/alpine.mask.js' %}"></script>
+        <script src="{% static 'js/alpine.min.js' %}" defer></script>
+        {% tailwind_css %}
+        <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}" />
+        <title>my site</title>
+    </head>
+    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+          {{ attrs }}
+          class="bg-surface dark:bg-surface-dark font-inter text-on-surface dark:text-on-surface-dark overflow-hidden transition-colors duration-300">
+        <c-fancy.notifications />
+        {{ slot }}
+    </body>
+</html>

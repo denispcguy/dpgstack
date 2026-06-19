@@ -1,0 +1,22 @@
+{% comment %} DEV ONLY! USED FOR HTML EXPERIMENTING {% endcomment %}
+{% load static %}
+<c-base-body>
+    <div class="flex min-h-svh items-center justify-center">
+        
+        <div id="buttonClicker"
+             x-init="setTimeout(() => htmx.find('button.fancy-button').click(), '100')"></div>
+        <button type="button"
+                x-data
+                @click="$store.darkMode.toggle()"
+                class="cursor-pointer">
+            <c-svg.dark-mode class="h-4 w-4 shrink-0" />
+        </button>
+        <button class="fancy-button"
+                hx-get="{% url 'form' %}"
+                hx-target="#stuff-goes-here"
+                hx-swap="innerHTML"></button>
+        <div id="stuff-goes-here">
+            <c-svg.spinner />
+        </div>
+    </div>
+</c-base-body>

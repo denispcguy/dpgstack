@@ -1,0 +1,126 @@
+{% comment %} Context: app_name; queryset; page_obj; fields; {% endcomment %}
+<nav class="flex justify-center py-4">
+    <ul class="flex items-center gap-2 text-sm font-medium w-full">
+        <li class="cursor-pointer select-none">
+            {% if page_obj.has_previous %}
+                <div hx-get="{% url url_name %}?page={{ page_obj.previous_page_number }}&order_by={{ request.GET.order_by }}"
+                     hx-target="#table-container"
+                     hx-select="#table-container"
+                     hx-swap="outerHTML"
+                     class="cursor-pointer flex items-center rounded-radius p-1 text-on-surface hover:text-primary dark:text-on-surface-dark dark:hover:text-primary-dark">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 20 20"
+                         fill="currentColor"
+                         class="size-6">
+                        <path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+                    </svg>
+                    Previous
+                </div>
+            {% else %}
+                <span class="flex items-center rounded-radius p-1 text-on-surface opacity-50 dark:text-on-surface-dark">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 20 20"
+                         fill="currentColor"
+                         class="size-6">
+                        <path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+                    </svg>
+                    Previous
+                </span>
+            {% endif %}
+        </li>
+        <li class="flex grow justify-center">
+            <ul class="flex items-center gap-2">
+                {% if page_obj.number > 2 %}
+                    <li>
+                        <div hx-get="{% url url_name %}?page=1&order_by={{ request.GET.order_by }}"
+                             hx-target="#table-container"
+                             hx-select="#table-container"
+                             hx-swap="outerHTML"
+                             class="select-none cursor-pointer flex size-6 items-center justify-center rounded-radius p-1 text-on-surface hover:text-primary dark:text-on-surface-dark dark:hover:text-primary-dark">
+                            1
+                        </div>
+                    </li>
+                {% endif %}
+                {% if page_obj.number > 3 %}
+                    <li>
+                        <span class="flex size-6 items-center justify-center rounded-radius p-1 text-on-surface dark:text-on-surface-dark">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke-width="1.5"
+                                 stroke="currentColor"
+                                 class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                            </svg>
+                        </span>
+                    </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <li class="select-none cursor-pointer flex size-6 items-center justify-center rounded-radius bg-primary p-1 font-bold text-on-primary dark:bg-primary-dark dark:text-on-primary-dark">
+                            {{ num }}
+                        </li>
+                    {% elif num >= page_obj.number|add:-1 and num <= page_obj.number|add:1 %}
+                        <li hx-get="{% url url_name %}?page={{ num }}&order_by={{ request.GET.order_by }}"
+                            hx-target="#table-container"
+                            hx-select="#table-container"
+                            hx-swap="outerHTML"
+                            class="select-none cursor-pointer flex size-6 items-center justify-center rounded-radius p-1 text-on-surface hover:text-primary dark:text-on-surface-dark dark:hover:text-primary-dark">
+                            {{ num }}
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.number < page_obj.paginator.num_pages|add:-2 %}
+                    <li>
+                        <span class="flex size-6 items-center justify-center rounded-radius p-1 text-on-surface dark:text-on-surface-dark">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke-width="1.5"
+                                 stroke="currentColor"
+                                 class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                            </svg>
+                        </span>
+                    </li>
+                {% endif %}
+                {% if page_obj.number < page_obj.paginator.num_pages|add:-1 %}
+                    <li hx-get="{% url url_name %}?page={{ page_obj.paginator.num_pages }}&order_by={{ request.GET.order_by }}"
+                        hx-target="#table-container"
+                        hx-select="#table-container"
+                        hx-swap="outerHTML"
+                        class="select-none cursor-pointer flex size-6 items-center justify-center rounded-radius p-1 text-on-surface hover:text-primary dark:text-on-surface-dark dark:hover:text-primary-dark">
+                        {{ page_obj.paginator.num_pages }}
+                    </li>
+                {% endif %}
+            </ul>
+        </li>
+        <li class="cursor-pointer select-none">
+            {% if page_obj.has_next %}
+                <div hx-get="{% url url_name %}?page={{ page_obj.next_page_number }}&order_by={{ request.GET.order_by }}"
+                     hx-target="#table-container"
+                     hx-select="#table-container"
+                     hx-swap="outerHTML"
+                     class="flex items-center rounded-radius p-1 text-on-surface hover:text-primary dark:text-on-surface-dark dark:hover:text-primary-dark">
+                    Next
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 20 20"
+                         fill="currentColor"
+                         class="size-6">
+                        <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+            {% else %}
+                <span class="flex items-center rounded-radius p-1 text-on-surface opacity-50 dark:text-on-surface-dark">
+                    Next
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 20 20"
+                         fill="currentColor"
+                         class="size-6">
+                        <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+            {% endif %}
+        </li>
+    </ul>
+</nav>

@@ -1,0 +1,79 @@
+{% load static table_tags widget_tweaks get_item %}
+<c-base.for-table>
+    <div x-data="{ formShown: false }"
+         class="flex pt-12 items-start justify-center">
+        <c-fancy.table.table>
+            <c-slot name="tr_loop">
+                {% partialdef table_row %}
+                    <tr {% if forloop.last and page_obj.has_next %} hx-get="{% url 'my_app:book' %}{% querystring action='get-new-page' page=page_obj.next_page_number order_by=request.GET.order_by %}" hx-target="tbody" hx-swap="beforeend" hx-select="tbody > tr" hx-trigger="intersect once"
+                    {% endif %}
+                    class="tr-flash">
+                    <td class="relative p-2">
+                        <c-fancy.table.actions-popup>
+                            <c-fancy.table.action-button text="Delete" hx-delete="{% url 'my_app:book' %}{% querystring pk=piece.id %}" hx-confirm="Are you sure you want to delete this item? This cannot be undone." />
+                            <c-fancy.table.action-button text="Edit" hx-get="{% url 'my_app:book' %}{% querystring pk=piece.id action='get-edit-row' %}" />
+                        </c-fancy.table.actions-popup>
+                    </td>
+                    {% for field in fields %}<td class="p-2 wrap-break-word">{{ piece|get_field:field }}</td>{% endfor %}
+                </tr>
+            {% endpartialdef table_row %}
+            {% partialdef edit_row %}
+                <tr id="row-{{ piece.id }}" class="bg-blue-800 text-blue-100 tr-flash">
+                    <td class="p-2">
+                        <button hx-put="{% url 'my_app:book' %}{% querystring pk=piece.id action='save-edited' %}"
+                                hx-include="#row-{{ piece.id }}"
+                                hx-target="closest tr"
+                                hx-swap="outerHTML"
+                                class="text-success hover:bg-success/10 p-1 rounded-md transition-colors"
+                                title="Save">
+                            <c-svg.checkmark />
+                        </button>
+                        <button hx-get="{% url 'my_app:book' %}{% querystring pk=piece.id action='get-normal-row' %}"
+                                hx-target="closest tr"
+                                hx-swap="outerHTML"
+                                class="text-error hover:bg-error/10 p-1 rounded-md transition-colors"
+                                title="Cancel">
+                            <c-svg.cross />
+                        </button>
+                    </td>
+                    {% for field_name in form.fields %}
+                        <td class="p-2">
+                            {% with field=form|get_item:field_name %}<c-fancy.form.field-inline :field="field" />{% endwith %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endpartialdef edit_row %}
+            {% for piece in queryset %}
+                {% partial table_row %}
+                {% endfor %}
+            </c-slot>
+        </c-fancy.table.table>
+        <div class="flex flex-col">
+            <button @click="$store.darkMode.toggle()"
+                    class="cursor-pointer text-on-surface dark:text-on-surface-dark hover:opacity-80">
+                <c-svg.dark-mode class="h-6 w-6" />
+            </button>
+            <button @click="formShown = true"
+                    class="cursor-pointer text-on-surface dark:text-on-surface-dark hover:opacity-80">
+                <c-svg.plus class="h-6 w-6" />
+            </button>
+        </div>
+        <c-fancy.form.popup>
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-on-surface dark:text-on-surface-dark">New book</h3>
+            </div>
+            <form hx-post="{% url 'my_app:book' %}"
+                  hx-swap="afterbegin"
+                  hx-target="tbody"
+                  class="space-y-4"
+                  @submit="formShown = false">
+                {% for field_name in form.fields %}
+                    {% with field=form|get_item:field_name %}<c-fancy.form.field :field="field" label="{{ field.label }}" />{% endwith %}
+                {% endfor %}
+                <div class="flex justify-end gap-3 pt-2">
+                    <c-fancy.form.submit-button class="shadow-lg shadow-primary/20" />
+                </div>
+            </form>
+        </c-fancy.form.popup>
+    </div>
+</c-base.for-table>

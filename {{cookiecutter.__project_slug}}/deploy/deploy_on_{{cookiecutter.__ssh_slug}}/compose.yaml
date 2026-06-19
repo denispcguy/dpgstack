@@ -1,0 +1,100 @@
+x-common: &cm
+  networks:
+    - shared_net
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:17.5
+    env_file:
+      - django/.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    expose:
+      - 5432
+    <<: *cm
+  django:
+    build:
+      context: ../..
+      dockerfile: deploy/deploy_on_{{cookiecutter.__ssh_slug}}/django.Dockerfile
+    restart: unless-stopped
+    expose:
+      - 8000
+    env_file:
+      - django/.env
+    depends_on:
+      - postgres
+    <<: *cm
+  jenkins:
+    build:
+      context: jenkins
+      network: host
+    container_name: {{cookiecutter.__project_slug}}-jenkins-container
+    expose:
+      - 8080
+      - 50000
+    env_file:
+      - jenkins/.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins/{{cookiecutter.__project_slug}}_bare_repo:/{{cookiecutter.__project_slug}}_bare_repo:ro
+      - ./jenkins/jenkins.yaml:/var/jenkins_home/casc_configs/jenkins.yaml:ro
+      - jenkins_home:/var/jenkins_home
+    <<: *cm
+  prometheus:
+    image: prom/prometheus
+    expose:
+      - 9090
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-admin-api
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    <<: *cm
+  node_exporter:
+    image: prom/node-exporter
+    command:
+      - --path.procfs=/host/proc
+      - --path.rootfs=/rootfs
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    <<: *cm
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    env_file:
+      - ./prometheus/exporters/.postgres.env
+    expose:
+      - 9187
+    <<: *cm
+  grafana:
+    image: grafana/grafana-oss
+    expose:
+      - 3000
+    env_file:
+      - ./grafana/.grafana.env
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./grafana/prometheus.yaml:/etc/grafana/provisioning/datasources/prometheus.yaml
+    <<: *cm
+
+volumes:
+  pgdata:
+  prometheus-data:
+  grafana-storage:
+  jenkins_home:
+
+networks:
+  shared_net:
+    external: true
+    name: dpgstack-network

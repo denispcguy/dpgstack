@@ -1,0 +1,97 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start Tailwind Watcher",
+            "type": "shell",
+            "windows": {
+                "command": "uv run manage.py tailwind start"
+            },
+            "linux": {
+                "command": "source ~/.zshrc && uv run manage.py tailwind start",
+            },
+            "isBackground": true,
+            "presentation": {
+                "reveal": "silent",
+            },
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": ".",
+                            "file": 1,
+                            "line": 1,
+                            "column": 1,
+                            "message": 1
+                        }
+                    ],
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": {
+                            "regexp": "."
+                        },
+                        "endsPattern": {
+                            "regexp": "."
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "label": "Start Django LiveReload Server",
+            "type": "shell",
+            "windows": {
+                "command": "uv run manage.py livereload -w 1 templates"
+            },
+            "linux": {
+                "command": "source ~/.zshrc && uv run manage.py livereload -w 1 templates",
+            },
+            "isBackground": true,
+            "presentation": {
+                "reveal": "silent",
+            },
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": ".",
+                            "file": 1,
+                            "line": 1,
+                            "column": 1,
+                            "message": 1
+                        }
+                    ],
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": {
+                            "regexp": "."
+                        },
+                        "endsPattern": {
+                            "regexp": "."
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "label": "Stop",
+            "command": "echo ${input:terminate}",
+            "type": "shell"
+        },
+        {
+            "label": "Build",
+            "dependsOn": [
+                "Start Tailwind Watcher",
+                "Start Django LiveReload Server",
+            ]
+        },
+    ],
+    "inputs": [
+        {
+            "id": "terminate",
+            "type": "command",
+            "command": "workbench.action.tasks.terminate",
+            "args": "terminateAll"
+        }
+    ]
+}

@@ -1,0 +1,111 @@
+x-common: &cm
+  restart: unless-stopped
+
+services:
+  nginx:
+    build:
+      context: nginx
+    ports:
+      - {{cookiecutter.local_nginx_port}}:80
+    volumes:
+      - ./nginx/{{cookiecutter.__project_slug}}.conf:/etc/nginx/conf.d/{{cookiecutter.__project_slug}}.conf:ro
+      - ../../staticfiles:/static:ro
+    extra_hosts:
+      - jenkins.localhost:127.0.0.1
+      - prometheus.localhost:127.0.0.1
+      - grafana.localhost:127.0.0.1
+    <<: *cm
+  postgres:
+    image: postgres:17.5
+    env_file:
+      - django/.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    expose:
+      - 5432
+    <<: *cm
+  django:
+    build:
+      context: ../..
+      dockerfile: deploy/deploy_on_localhost/django/Dockerfile
+    expose:
+      - 8000
+    env_file:
+      - django/.env
+    depends_on:
+      - postgres
+    <<: *cm
+  jenkins:
+    build:
+      context: jenkins
+      network: host
+    env_file:
+      - jenkins/.env
+    expose:
+      - 8080
+      - 50000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins/{{cookiecutter.__project_slug}}_bare_repo:/{{cookiecutter.__project_slug}}_bare_repo:ro
+      - ./jenkins/jenkins.yaml:/var/jenkins_home/casc_configs/jenkins.yaml:ro
+    <<: *cm
+  prometheus:
+    image: prom/prometheus
+    depends_on:
+      - nginx
+    expose:
+      - 9090
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-admin-api
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    <<: *cm
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter
+    expose:
+      - 9113
+    command: --nginx.scrape-uri=http://nginx:8080/stub_status
+    <<: *cm
+  node_exporter:
+    image: prom/node-exporter
+    command:
+      - --path.procfs=/host/proc
+      - --path.rootfs=/rootfs
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    <<: *cm
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    env_file:
+      - ./prometheus/exporters/.postgres.env
+    expose:
+      - 9187
+    <<: *cm
+  grafana:
+    image: grafana/grafana-oss
+    depends_on:
+      - nginx
+    expose:
+      - 3000
+    env_file:
+      - grafana/.env
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./grafana/prometheus.yaml:/etc/grafana/provisioning/datasources/prometheus.yaml
+    <<: *cm
+volumes:
+  pgdata:
+  prometheus-data:
+  grafana-storage:

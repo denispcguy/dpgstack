@@ -1,0 +1,12 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh 'pwd'
+                sh 'ls -la'
+                sh 'docker compose -p {{cookiecutter.__project_slug}}_on_localhost -f deploy/deploy_on_localhost/compose.yaml up --build -d django'
+            }
+        }
+    }
+}

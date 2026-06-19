@@ -1,0 +1,5 @@
+<a href="{% url view %}"
+   class="flex items-center rounded-radius gap-2 px-2 py-1.5 text-sm font-medium underline-offset-2 focus-visible:underline focus:outline-hidden {% if request.resolver_match.view_name == view %} bg-primary/10 text-on-surface-strong dark:bg-primary-dark/10 dark:text-on-surface-dark-strong {% else %} text-on-surface hover:bg-primary/5 hover:text-on-surface-strong dark:text-on-surface-dark dark:hover:bg-primary-dark/5 dark:hover:text-on-surface-dark-strong {% endif %}">
+    {{ slot }}
+    <span>{{ name }}</span>
+</a>

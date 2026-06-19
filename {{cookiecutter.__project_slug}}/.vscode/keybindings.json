@@ -1,0 +1,18 @@
+// New stuff
+[
+    {
+        "key": "ctrl+b",
+        "when": "editorLangId != 'markdown'",
+        "command": "workbench.action.toggleSidebarVisibility"
+    },
+    {
+        "key": "ctrl+b",
+        "when": "editorLangId != 'markdown'",
+        "command": "-workbench.action.toggleSidebarVisibility"
+    },
+    {
+        "key": "ctrl+b",
+        "command": "editor.action.revealDefinition",
+        "when": "editorHasDefinitionProvider && editorTextFocus && !isInEmbeddedEditor && editorLangId != 'markdown'"
+    }
+]
